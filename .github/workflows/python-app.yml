@@ -1,33 +1,39 @@
-name: Fetch iPhone Price
+name: run main.py
 
 on:
   schedule:
-    - cron: '0 */12 * * *'  # Runs every 12 hours
+    - cron: '0 */12 * * *' # At 00:00 on Monday
 
 jobs:
-  fetch-price:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: checkout repo content
+        uses: actions/checkout@v2 # checkout the repository content to github runner
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Run the Python script
-      run: |
-        python src/main.py
-
-    - name: Upload log file
-      uses: actions/upload-artifact@v3
-      with:
-        name: iphone-price-log
-        path: logs/iphone_price_log.txt
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' # install the python version needed
+          
+      - name: install python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: execute py script # run main.py
+        run: python main.py
+          
+      - name: commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git diff-index --quiet HEAD || (git commit -a -m "updated logs" --allow-empty)
+          
+      - name: push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main 
